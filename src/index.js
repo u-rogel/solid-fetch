@@ -56,7 +56,7 @@ class SolidFetch {
         return withDynamicParams[key]
       })
     }
-    console.log({ resolvedParams })
+
     return resolvedParams
   }
 
@@ -73,9 +73,9 @@ class SolidFetch {
     return url
   }
 
-  fetch(pathStructure, ...dynamicParams) {
+  request(pathStructure, ...dynamicParams) {
     const path = this.generateRequest(pathStructure, ...dynamicParams)
-    console.log({ path })
+
     return ({
       method = 'GET',
       headers = {},
