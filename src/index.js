@@ -131,9 +131,19 @@ class SolidFetch {
         body,
       }
 
+      let finalUrl = url
+      let finalRequestOptions = { ...requestOptions }
+
+      if (this.interceptedReq) {
+        const {
+          url: interceptedUrl,
           requestOptions: interceptedRequestOptions,
         } = this.interceptedReq({ url, requestOptions })
         finalUrl = interceptedUrl
+        finalRequestOptions = interceptedRequestOptions
+      }
+
+      return this.systemFetch(finalUrl, finalRequestOptions)
         .then(async (response) => {
           if (response.status !== 200) {
             throw new Error(JSON.stringify({
@@ -146,8 +156,8 @@ class SolidFetch {
                 counter: response.counter,
               },
               request: {
-                url,
-                requestOptions,
+                url: finalUrl,
+                requestOptions: finalRequestOptions,
               },
             }))
           }
