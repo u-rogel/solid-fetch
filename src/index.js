@@ -145,7 +145,7 @@ class SolidFetch {
             }))
           }
           let result
-          if (response.headers['content-type'] === 'application/json') {
+          if (response.headers.get('content-type').includes('application/json')) {
             result = await response.json()
           } else {
             result = response
