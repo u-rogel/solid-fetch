@@ -7,6 +7,10 @@ class SolidFetch {
     this.systemFetch = null
   }
 
+  #emptySearch = /\?$/
+
+  #searchWithParam = /\?.+$/
+
   setConfig(config) {
     const newConfigKeys = Object.keys(config)
     newConfigKeys.forEach((key) => {
@@ -85,14 +89,24 @@ class SolidFetch {
       if (!this.systemFetch) {
         throw new Error('Fetch has to be declared before the request-client can work')
       }
+
+      let searchQueryPrepend = ''
+      if (this.#emptySearch.test(path)) {
+        searchQueryPrepend = ''
+      } else if (this.#searchWithParam.test(path)) {
+        searchQueryPrepend = '&'
+      } else {
+        searchQueryPrepend = '?'
+      }
+
       const resolvedQuery = Object.keys(query).reduce((acc, queryKey, idx, array) => {
         const isAnpsConcat = idx + 1 < array.length
         let queryValue = `${queryKey}=${query[queryKey]}`
         if (typeof query[queryKey] === 'function') {
           queryValue = `${queryKey}=${query[queryKey](this.getInjectables())}`
         }
-        return `${acc}${isAnpsConcat ? '&' : ''}${queryValue}`
-      }, path.includes('?') ? '&' : '?')
+        return `${acc}${queryValue}${isAnpsConcat ? '&' : ''}`
+      }, searchQueryPrepend)
 
       const url = `${path}${resolvedQuery}`
 
@@ -109,20 +123,20 @@ class SolidFetch {
         headers: {
           ...setHeaders,
         },
+        body,
       }
 
       return this.systemFetch(url, requestOptions)
-        .then((res) => {
-          if (res.status !== 200) {
-            console.log('got an error back')
+        .then(async (response) => {
+          if (response.status !== 200) {
             throw new Error(JSON.stringify({
               message: 'request resulted in error',
               error: {
-                url: res.url,
-                status: res.status,
-                statusText: res.statusText,
-                headers: res.headers,
-                counter: res.counter,
+                url: response.url,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers,
+                counter: response.counter,
               },
               request: {
                 url,
@@ -130,16 +144,21 @@ class SolidFetch {
               },
             }))
           }
+          let result
+          if (response.headers['content-type'] === 'application/json') {
+            result = await response.json()
+          } else {
+            result = response
+          }
           if (this.interceptedRes) {
-            const interceptedResValue = this.interceptedRes(res)
+            const interceptedResValue = this.interceptedRes(result)
             if (interceptedResValue) {
               return interceptedResValue
             }
           }
-          return res
+          return result
         })
         .catch((error) => {
-          console.log('caught general error:', error)
           if (this.interceptedError) {
             const interceptedResValue = this.interceptedError(error)
             if (interceptedResValue) {
