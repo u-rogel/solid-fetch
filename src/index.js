@@ -4,6 +4,8 @@ class SolidFetch {
     this.interceptedReq = null
     this.interceptedRes = null
     this.interceptedError = null
+    this.globalInjectedQuery = {}
+    this.globalInjectedHeaders = {}
     this.systemFetch = null
   }
 
@@ -82,13 +84,16 @@ class SolidFetch {
 
     return ({
       method = 'GET',
-      headers = {},
+      query: rawQuery = {},
+      headers: rawHeaders = {},
       body,
-      query = {},
     } = {}) => {
       if (!this.systemFetch) {
         throw new Error('Fetch has to be declared before the request-client can work')
       }
+
+      const query = { ...this.globalInjectedQuery, ...rawQuery }
+      const headers = { ...this.globalInjectedHeaders, ...rawHeaders }
 
       let searchQueryPrepend = ''
       if (this.#emptySearch.test(path)) {
@@ -126,7 +131,9 @@ class SolidFetch {
         body,
       }
 
-      return this.systemFetch(url, requestOptions)
+          requestOptions: interceptedRequestOptions,
+        } = this.interceptedReq({ url, requestOptions })
+        finalUrl = interceptedUrl
         .then(async (response) => {
           if (response.status !== 200) {
             throw new Error(JSON.stringify({
