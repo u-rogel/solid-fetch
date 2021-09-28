@@ -4,8 +4,8 @@ class SolidFetch {
     this.interceptedReq = null
     this.interceptedRes = null
     this.interceptedError = null
-    this.globalInjectedQuery = {}
-    this.globalInjectedHeaders = {}
+    this.globalQuery = {}
+    this.globalHeaders = {}
     this.systemFetch = null
   }
 
@@ -92,8 +92,8 @@ class SolidFetch {
         throw new Error('Fetch has to be declared before the request-client can work')
       }
 
-      const query = { ...this.globalInjectedQuery, ...rawQuery }
-      const headers = { ...this.globalInjectedHeaders, ...rawHeaders }
+      const query = { ...this.globalQuery, ...rawQuery }
+      const headers = { ...this.globalHeaders, ...rawHeaders }
 
       let searchQueryPrepend = ''
       if (this.#emptySearch.test(path)) {
