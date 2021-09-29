@@ -144,10 +144,8 @@ class SolidFetch {
           return interceptedReqVal || request
         }, request)
 
-        if (interceptedResFinalVal) {
-          finalUrl = interceptedResFinalVal.url
-          finalRequestOptions = interceptedResFinalVal.requestOptions
-        }
+        finalUrl = interceptedResFinalVal.url
+        finalRequestOptions = interceptedResFinalVal.requestOptions
       }
 
       return this.systemFetch(finalUrl, finalRequestOptions)
@@ -179,9 +177,7 @@ class SolidFetch {
               const interceptedResVal = interceptor.action(accResult)
               return interceptedResVal || result
             }, result)
-            if (interceptedResFinalVal) {
-              return interceptedResFinalVal
-            }
+            return interceptedResFinalVal
           }
           return result
         })
@@ -191,9 +187,7 @@ class SolidFetch {
               const interceptedErrVal = interceptor.action(accError)
               return interceptedErrVal || error
             }, error)
-            if (interceptedErrFinalVal) {
-              throw new Error(interceptedErrFinalVal)
-            }
+            throw new Error(interceptedErrFinalVal)
           }
           throw new Error(error)
         })
