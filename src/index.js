@@ -139,14 +139,14 @@ class SolidFetch {
           url: finalUrl,
           requestOptions: finalRequestOptions,
         }
-        const interceptedResFinalValue = this.interceptedReq.reduce((accResult, interceptor) => {
-          const interceptedReqValue = interceptor.action(accResult)
-          return interceptedReqValue
+        const interceptedResFinalVal = this.interceptedReq.reduce((accResult, interceptor) => {
+          const interceptedReqVal = interceptor.action(accResult)
+          return interceptedReqVal || request
         }, request)
 
-        if (interceptedResFinalValue) {
-          finalUrl = interceptedResFinalValue.url
-          finalRequestOptions = interceptedResFinalValue.requestOptions
+        if (interceptedResFinalVal) {
+          finalUrl = interceptedResFinalVal.url
+          finalRequestOptions = interceptedResFinalVal.requestOptions
         }
       }
 
@@ -175,24 +175,24 @@ class SolidFetch {
             result = response
           }
           if (this.interceptedRes.length) {
-            const interceptedResValue = this.interceptedRes.reduce((accResult, interceptor) => {
-              const interceptedRes = interceptor.action(accResult)
-              return interceptedRes
+            const interceptedResFinalVal = this.interceptedRes.reduce((accResult, interceptor) => {
+              const interceptedResVal = interceptor.action(accResult)
+              return interceptedResVal || result
             }, result)
-            if (interceptedResValue) {
-              return interceptedResValue
+            if (interceptedResFinalVal) {
+              return interceptedResFinalVal
             }
           }
           return result
         })
         .catch((error) => {
           if (this.interceptedError.length) {
-            const interceptedErrValue = this.interceptedError.reduce((accError, interceptor) => {
-              const interceptedRes = interceptor.action(accError)
-              return interceptedRes
+            const interceptedErrFinalVal = this.interceptedError.reduce((accError, interceptor) => {
+              const interceptedErrVal = interceptor.action(accError)
+              return interceptedErrVal || error
             }, error)
-            if (interceptedErrValue) {
-              throw new Error(interceptedErrValue)
+            if (interceptedErrFinalVal) {
+              throw new Error(interceptedErrFinalVal)
             }
           }
           throw new Error(error)
