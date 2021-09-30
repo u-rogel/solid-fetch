@@ -14,11 +14,19 @@ class SolidFetch {
   #searchWithParam = /\?.+$/
 
   setConfig(config) {
-    const newConfigKeys = Object.keys(config)
-    newConfigKeys.forEach((key) => {
-      this[key] = config[key]
-    })
+    for (const [key, value] of Object.entries(config)) {
+      this[key] = value
+    }
   }
+
+  // Some api servers return info in their headers
+  cutHeaders = (res) => {
+    let headersObj = {};
+    res.headers.forEach((val, key) => {
+      headersObj[key] = val;
+    });
+    return headersObj;
+  };
 
   setInjectables(newInjectables) {
     const currentInjectables = this.injectables()
@@ -149,7 +157,10 @@ class SolidFetch {
 
       return this.systemFetch(finalUrl, finalRequestOptions)
         .then(async (response) => {
-          if (response.status !== 200) {
+          if (response.status < 200 && response.status >=300) {
+            // Responses 200-299 are successfull responses. 
+            // more info : https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
             const error = new Error(JSON.stringify({
               name: 'NoSuccess',
               message: 'request resulted in error',
@@ -176,6 +187,9 @@ class SolidFetch {
           } else {
             result.data = response
           }
+
+          // for those servers that returns info in the headers
+          result.headers = this.cutHeaders(response)
 
           if (this.interceptedRes.length) {
             const interceptedResFinalVal = this.interceptedRes.reduce((accResult, interceptor) => {
