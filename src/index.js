@@ -20,7 +20,7 @@ class SolidFetch {
   }
 
   // Some api servers return info in their headers
-  cutHeaders = (res) => {
+  cutHeaders (res){
     let headersObj = {};
     res.headers.forEach((val, key) => {
       headersObj[key] = val;
