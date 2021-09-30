@@ -153,7 +153,17 @@ class SolidFetch {
             const error = new Error(JSON.stringify({
               name: 'NoSuccess',
               message: 'request resulted in error',
-              response,
+              response: {
+                bodyUsed: response.bodyUsed,
+                headers: Object.fromEntries(response.headers.entries()),
+                ok: response.ok,
+                redirected: response.redirected,
+                size: response.size,
+                status: response.status,
+                statusText: response.statusText,
+                timeout: response.timeout,
+                url: response.url,
+              },
               request: {
                 url: finalUrl,
                 requestOptions: finalRequestOptions,
@@ -213,5 +223,7 @@ class SolidFetch {
   }
 }
 
-export default new SolidFetch()
-export const instance = () => new SolidFetch()
+// export default new SolidFetch()
+// export const instance = () => new SolidFetch()
+
+module.exports = new SolidFetch()

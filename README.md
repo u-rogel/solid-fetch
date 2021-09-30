@@ -234,6 +234,7 @@ Response:
 ```
 
 Standard JS Error with a JSON content:
+**None 200 response will also result in `NoSuccess` error*
 
 ```js
 {
