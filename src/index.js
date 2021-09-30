@@ -3,7 +3,7 @@ class SolidFetch {
     this.injectables = () => ({})
     this.interceptedReq = []
     this.interceptedRes = []
-    this.interceptedError = []
+    this.interceptedErr = []
     this.globalQuery = {}
     this.globalHeaders = {}
     this.systemFetch = null
@@ -62,7 +62,6 @@ class SolidFetch {
         return withDynamicParams[key]
       })
     }
-
     return resolvedParams
   }
 
@@ -113,7 +112,7 @@ class SolidFetch {
         return `${acc}${queryValue}${isAnpsConcat ? '&' : ''}`
       }, searchQueryPrepend)
 
-      const url = `${path}${resolvedQuery}`
+      const url = `${path}${Object.keys(query).length ? resolvedQuery : ''}`
 
       const setHeaders = Object.keys(headers).reduce((headerAcc, headerKey) => {
         let headerValue = headers[headerKey]
@@ -139,9 +138,9 @@ class SolidFetch {
           url: finalUrl,
           requestOptions: finalRequestOptions,
         }
-        const interceptedResFinalVal = this.interceptedReq.reduce((accResult, interceptor) => {
-          const interceptedReqVal = interceptor.action(accResult)
-          return interceptedReqVal || request
+        const interceptedResFinalVal = this.interceptedReq.reduce((accReq, interceptor) => {
+          const interceptedReqVal = interceptor.action(accReq)
+          return interceptedReqVal || accReq
         }, request)
 
         finalUrl = interceptedResFinalVal.url
@@ -151,49 +150,70 @@ class SolidFetch {
       return this.systemFetch(finalUrl, finalRequestOptions)
         .then(async (response) => {
           if (response.status !== 200) {
-            throw new Error(JSON.stringify({
+            const error = new Error(JSON.stringify({
+              name: 'NoSuccess',
               message: 'request resulted in error',
-              error: {
-                url: response.url,
-                status: response.status,
-                statusText: response.statusText,
-                headers: response.headers,
-                counter: response.counter,
-              },
+              response,
               request: {
                 url: finalUrl,
                 requestOptions: finalRequestOptions,
               },
             }))
+            error.name = 'NoSuccess'
+            throw error
           }
-          let result
+
+          const result = {
+            request: {
+              url: finalUrl,
+              requestOptions: finalRequestOptions,
+            },
+            data: null,
+          }
+
           if (response.headers.get('content-type').includes('application/json')) {
-            result = await response.json()
+            result.data = await response.json()
           } else {
-            result = response
+            result.data = response
           }
+
           if (this.interceptedRes.length) {
             const interceptedResFinalVal = this.interceptedRes.reduce((accResult, interceptor) => {
               const interceptedResVal = interceptor.action(accResult)
-              return interceptedResVal || result
+              return interceptedResVal || accResult
             }, result)
             return interceptedResFinalVal
           }
+
           return result
         })
         .catch((error) => {
-          if (this.interceptedError.length) {
-            const interceptedErrFinalVal = this.interceptedError.reduce((accError, interceptor) => {
-              const interceptedErrVal = interceptor.action(accError)
-              return interceptedErrVal || error
-            }, error)
-            throw new Error(interceptedErrFinalVal)
+          let finalError = error
+          if (error.name !== 'NoSuccess') {
+            finalError = new Error(JSON.stringify({
+              name: error.name,
+              message: error.message,
+              request: {
+                url: finalUrl,
+                requestOptions: finalRequestOptions,
+              },
+            }))
+            finalError.name = error.name
           }
-          throw new Error(error)
+          if (this.interceptedErr.length) {
+            const interceptedErrFinalVal = this.interceptedErr.reduce((accError, interceptor) => {
+              const interceptedErrVal = interceptor.action(accError)
+              return interceptedErrVal || accError
+            }, finalError)
+            throw interceptedErrFinalVal
+          }
+          throw finalError
         })
     }
   }
 }
 
-export default new SolidFetch()
-export const instance = () => new SolidFetch()
+// export default new SolidFetch()
+// export const instance = () => new SolidFetch()
+
+module.exports = new SolidFetch()
