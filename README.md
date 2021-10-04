@@ -221,6 +221,7 @@ Response:
 ```js
 {
   data: <ParsedResult> || <RawResponse>,
+  headers: Object,
   request: {
     url: String,
     requestOptions: {
