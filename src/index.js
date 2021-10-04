@@ -210,6 +210,5 @@ class SolidFetch {
   }
 }
 
-// export default new SolidFetch()
-// export const instance = () => new SolidFetch()
-module.exports = new SolidFetch()
+export default new SolidFetch()
+export const instance = () => new SolidFetch()
