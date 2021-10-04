@@ -31,48 +31,41 @@ class SolidFetch {
   getInjectables() {
     const currentInjectables = this.injectables()
     return Object.keys(currentInjectables).reduce((acc, key) => {
-      let value = currentInjectables[key]
       if (typeof currentInjectables[key] === 'function') {
-        value = currentInjectables[key]()
+        return { ...acc, [key]: currentInjectables[key]() }
       }
-      return { ...acc, [key]: value }
+      return { ...acc, [key]: currentInjectables[key] }
     }, {})
   }
 
   resolveDynamic(withDynamicParams) {
+    const injectables = this.getInjectables()
     if (Array.isArray(withDynamicParams)) {
       let resolvedParams = []
-      if (withDynamicParams && withDynamicParams.length) {
+      if (withDynamicParams.length) {
         resolvedParams = withDynamicParams.map((item) => {
           if (typeof item === 'function') {
-            return item(this.getInjectables())
+            return item(injectables)
           }
           return item
         })
       }
       return resolvedParams
     }
-    let resolvedParams = {}
-    const dynamicKeys = Object.keys(withDynamicParams)
-    if (dynamicKeys.length) {
-      resolvedParams = dynamicKeys.map((key) => {
-        if (typeof withDynamicParams[key] === 'function') {
-          return withDynamicParams[key](this.getInjectables())
-        }
-        return withDynamicParams[key]
-      })
-    }
+    const resolvedParams = Object.keys(withDynamicParams).reduce((acc, key) => {
+      if (typeof withDynamicParams[key] === 'function') {
+        return { ...acc, [key]: withDynamicParams[key](injectables) }
+      }
+      return { ...acc, [key]: withDynamicParams[key] }
+    }, {})
     return resolvedParams
   }
 
   generateRequest(pathStructure, ...dynamicParams) {
     const resolvedParams = this.resolveDynamic(dynamicParams)
-    const url = pathStructure.reduce((acc, val, idx, arr) => {
-      let mergedPathWithParams = `${val}`
-      if (idx !== arr.length - 1 && resolvedParams[idx]) {
-        mergedPathWithParams = `${mergedPathWithParams}${resolvedParams[idx]}`
-      }
-      return `${acc}${mergedPathWithParams}`
+    const url = pathStructure.reduce((acc, hardStr, idx) => {
+      const pathWithParams = `${hardStr}${resolvedParams[idx] || ''}`
+      return `${acc}${pathWithParams}`
     }, '')
 
     return url
@@ -103,24 +96,16 @@ class SolidFetch {
         searchQueryPrepend = '?'
       }
 
-      const resolvedQuery = Object.keys(query).reduce((acc, queryKey, idx, array) => {
+      const resolvedQuery = this.resolveDynamic(query)
+      const queryStr = Object.keys(resolvedQuery).reduce((acc, queryKey, idx, array) => {
         const isAnpsConcat = idx + 1 < array.length
-        let queryValue = `${queryKey}=${query[queryKey]}`
-        if (typeof query[queryKey] === 'function') {
-          queryValue = `${queryKey}=${query[queryKey](this.getInjectables())}`
-        }
+        const queryValue = `${queryKey}=${query[queryKey]}`
         return `${acc}${queryValue}${isAnpsConcat ? '&' : ''}`
       }, searchQueryPrepend)
 
-      const url = `${path}${Object.keys(query).length ? resolvedQuery : ''}`
+      const url = `${path}${Object.keys(query).length ? queryStr : ''}`
 
-      const setHeaders = Object.keys(headers).reduce((headerAcc, headerKey) => {
-        let headerValue = headers[headerKey]
-        if (typeof headers[headerKey] === 'function') {
-          headerValue = headers[headerKey](this.getInjectables())
-        }
-        return { ...headerAcc, [headerKey]: headerValue }
-      }, {})
+      const setHeaders = this.resolveDynamic(headers)
 
       const requestOptions = {
         method,
@@ -138,13 +123,13 @@ class SolidFetch {
           url: finalUrl,
           requestOptions: finalRequestOptions,
         }
-        const interceptedResFinalVal = this.interceptedReq.reduce((accReq, interceptor) => {
+        const interceptedReqFinalVal = this.interceptedReq.reduce((accReq, interceptor) => {
           const interceptedReqVal = interceptor.action(accReq)
           return interceptedReqVal || accReq
         }, request)
 
-        finalUrl = interceptedResFinalVal.url
-        finalRequestOptions = interceptedResFinalVal.requestOptions
+        finalUrl = interceptedReqFinalVal.url
+        finalRequestOptions = interceptedReqFinalVal.requestOptions
       }
 
       return this.systemFetch(finalUrl, finalRequestOptions)
@@ -225,5 +210,4 @@ class SolidFetch {
 
 // export default new SolidFetch()
 // export const instance = () => new SolidFetch()
-
 module.exports = new SolidFetch()
