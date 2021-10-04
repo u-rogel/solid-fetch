@@ -222,6 +222,11 @@ Response:
 {
   data: <ParsedResult> || <RawResponse>,
   headers: Object,
+  ok: Boolean,
+  redirected: Boolean,
+  size: Number,
+  status: Number,
+  statusText: String,
   request: {
     url: String,
     requestOptions: {

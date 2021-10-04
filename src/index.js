@@ -166,6 +166,11 @@ class SolidFetch {
             },
             data: null,
             headers: responseHeaders,
+            ok: response.ok,
+            redirected: response.redirected,
+            size: response.size,
+            status: response.status,
+            statusText: response.statusText,
           }
 
           if (responseHeaders['content-type'].includes('application/json')) {
