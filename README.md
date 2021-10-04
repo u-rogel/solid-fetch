@@ -198,7 +198,7 @@ SolidFetch.setConfig({
 })
 ```
 
-**Also if the status code is NOT 200, an error will be thrown.*
+**If the status code is NOT 200-299, an error will be thrown.*
 
 ### Request, Response, Error Shape
 
