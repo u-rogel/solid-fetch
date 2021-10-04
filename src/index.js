@@ -134,13 +134,14 @@ class SolidFetch {
 
       return this.systemFetch(finalUrl, finalRequestOptions)
         .then(async (response) => {
+          const responseHeaders = Object.fromEntries(response.headers.entries())
           if (response.status < 200 && response.status >= 300) {
             const error = new Error(JSON.stringify({
               name: 'NoSuccess',
               message: 'request resulted in error',
               response: {
                 bodyUsed: response.bodyUsed,
-                headers: Object.fromEntries(response.headers.entries()),
+                headers: responseHeaders,
                 ok: response.ok,
                 redirected: response.redirected,
                 size: response.size,
@@ -164,9 +165,10 @@ class SolidFetch {
               requestOptions: finalRequestOptions,
             },
             data: null,
+            headers: responseHeaders,
           }
 
-          if (response.headers.get('content-type').includes('application/json')) {
+          if (responseHeaders['content-type'].includes('application/json')) {
             result.data = await response.json()
           } else {
             result.data = response
