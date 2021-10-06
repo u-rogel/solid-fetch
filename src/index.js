@@ -38,12 +38,12 @@ class SolidFetch {
     }, {})
   }
 
-  resolveDynamic(withDynamicParams) {
+  resolveDynamic(dynamicParams) {
     const injectables = this.getInjectables()
-    if (Array.isArray(withDynamicParams)) {
+    if (Array.isArray(dynamicParams)) {
       let resolvedParams = []
-      if (withDynamicParams.length) {
-        resolvedParams = withDynamicParams.map((item) => {
+      if (dynamicParams.length) {
+        resolvedParams = dynamicParams.map((item) => {
           if (typeof item === 'function') {
             return item(injectables)
           }
@@ -52,11 +52,11 @@ class SolidFetch {
       }
       return resolvedParams
     }
-    const resolvedParams = Object.keys(withDynamicParams).reduce((acc, key) => {
-      if (typeof withDynamicParams[key] === 'function') {
-        return { ...acc, [key]: withDynamicParams[key](injectables) }
+    const resolvedParams = Object.keys(dynamicParams).reduce((acc, key) => {
+      if (typeof dynamicParams[key] === 'function') {
+        return { ...acc, [key]: dynamicParams[key](injectables) }
       }
-      return { ...acc, [key]: withDynamicParams[key] }
+      return { ...acc, [key]: dynamicParams[key] }
     }, {})
     return resolvedParams
   }
@@ -99,7 +99,7 @@ class SolidFetch {
       const resolvedQuery = this.resolveDynamic(query)
       const queryStr = Object.keys(resolvedQuery).reduce((acc, queryKey, idx, array) => {
         const isAnpsConcat = idx + 1 < array.length
-        const queryValue = `${queryKey}=${query[queryKey]}`
+        const queryValue = `${queryKey}=${resolvedQuery[queryKey]}`
         return `${acc}${queryValue}${isAnpsConcat ? '&' : ''}`
       }, searchQueryPrepend)
 
@@ -123,6 +123,7 @@ class SolidFetch {
           url: finalUrl,
           requestOptions: finalRequestOptions,
         }
+
         const interceptedReqFinalVal = this.interceptedReq.reduce((accReq, interceptor) => {
           const interceptedReqVal = interceptor.action(accReq)
           return interceptedReqVal || accReq
@@ -173,7 +174,7 @@ class SolidFetch {
             statusText: response.statusText,
           }
 
-          if (responseHeaders['content-type'].includes('application/json')) {
+          if (responseHeaders['content-type']?.includes('application/json')) {
             result.data = await response.json()
           } else {
             result.data = response
