@@ -1,6 +1,6 @@
 {
   "name": "solid-fetch",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Http request client promise-based supporting injectable request properties like: headers, parameters and more",
   "main": "dist/bundle.js",
   "files": [
