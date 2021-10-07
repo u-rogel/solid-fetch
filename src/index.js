@@ -136,7 +136,7 @@ class SolidFetch {
       return this.systemFetch(finalUrl, finalRequestOptions)
         .then(async (response) => {
           const responseHeaders = Object.fromEntries(response.headers.entries())
-          if (response.status < 200 && response.status >= 300) {
+          if (response.status < 200 || response.status >= 300) {
             const error = new Error(JSON.stringify({
               name: 'NoSuccess',
               message: 'request resulted in error',
