@@ -6,7 +6,7 @@ class SolidFetch {
     this.interceptedErr = []
     this.globalQuery = {}
     this.globalHeaders = {}
-    this.systemFetch = null
+    this.systemFetch = global.fetch ? global.fetch.bind(global) : null
   }
 
   #emptySearch = /\?$/
