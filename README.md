@@ -92,7 +92,11 @@ SolidFetch.request`http://test-server.io/${(p) => p.language}/messages`({
   headers: {
     // Injection in headers
     Authorization: (p) => `Bearer ${p.jwtToken}`
-  }
+  },
+  body: (p) => ({
+    // Injection in body
+    userId: p.userId
+  })
 })
   .then((res) => {
     console.log('result from SolidFetch')
@@ -100,6 +104,27 @@ SolidFetch.request`http://test-server.io/${(p) => p.language}/messages`({
   .catch((err) => {
     console.log('error from SolidFetch')
   })
+```
+
+**Note: Body can be resolved in two ways**
+* Less intuitive but fits for object with nested keys:
+```js
+SolidFetch.request`url`({
+  body: (p) => ({
+    // Injection in body
+    userId: p.userId
+  })
+})
+```
+
+* Similar to the other injections but works only with first level keys:
+```js
+SolidFetch.request`url`({
+  body: {
+    // Injection in body
+    userId: (p) => p.userId
+  }
+})
 ```
 
 ### Global Injections
@@ -239,8 +264,7 @@ Response:
 }
 ```
 
-Standard JS Error with a JSON content:
-**None 200 response will also result in `NoSuccess` error*
+Standard JS Error with JSON content:
 
 ```js
 {
@@ -272,4 +296,12 @@ const SolidFetchChatApi = instance()
 SolidFetchChatApi.setConfig({
   ...
 })
+```
+
+Use your solid-fetch configs outside of it
+
+```js
+import SolidFetch from 'solid-fetch'
+
+const { useId, jwtToken } = SolidFetch.getInjectables()
 ```

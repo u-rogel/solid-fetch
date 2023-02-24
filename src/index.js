@@ -98,21 +98,40 @@ class SolidFetch {
 
       const resolvedQuery = this.resolveDynamic(query)
       const queryStr = Object.keys(resolvedQuery).reduce((acc, queryKey, idx, array) => {
-        const isAnpsConcat = idx + 1 < array.length
+        const isAmpsConcat = idx + 1 < array.length
         const queryValue = `${queryKey}=${resolvedQuery[queryKey]}`
-        return `${acc}${queryValue}${isAnpsConcat ? '&' : ''}`
+        return `${acc}${queryValue}${isAmpsConcat ? '&' : ''}`
       }, searchQueryPrepend)
 
       const url = `${path}${Object.keys(query).length ? queryStr : ''}`
 
       const setHeaders = this.resolveDynamic(headers)
 
+      const finalBody = (() => {
+        let resolvedBody = body
+        if (typeof body === 'function') {
+          resolvedBody = body(this.getInjectables())
+        } else if (
+          setHeaders['Content-Type'] === 'application/json'
+          && typeof body === 'object'
+        ) {
+          resolvedBody = this.resolveDynamic(body)
+        }
+        if (
+          setHeaders['Content-Type'] === 'application/json'
+          && typeof resolvedBody === 'object'
+        ) {
+          return JSON.stringify(resolvedBody)
+        }
+        return resolvedBody
+      })()
+
       const requestOptions = {
         method,
         headers: {
           ...setHeaders,
         },
-        body,
+        body: finalBody,
       }
 
       let finalUrl = url
@@ -216,5 +235,5 @@ class SolidFetch {
   }
 }
 
-export default new SolidFetch()
-export const instance = () => new SolidFetch()
+module.exports = new SolidFetch()
+// export const instance = () => new SolidFetch()
