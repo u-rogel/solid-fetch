@@ -22,15 +22,14 @@ npm install solid-fetch
 
 ## Usage
 
-The module needs to get first things the fetch function to use:
-Browser: `fetch`
-Node: `node-fetch`
+We assume the module is used in the browser so `fetch` is picked by default. If you run in node or another environment pass in your custom fetch as `systemFetch` key to the `setConfig` function. In node we recommend to use - `node-fetch`.
 
 ```js
 import SolidFetch from 'solid-fetch'
+import fetch from 'node-fetch'
 
 SolidFetch.setConfig({
-  systemFetch: window.fetch.bind(window),
+  systemFetch: fetch,
 })
 
 SolidFetch.request`http://test-server.io/messages`()
