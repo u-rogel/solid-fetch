@@ -1,6 +1,6 @@
 {
   "name": "solid-fetch",
-  "version": "1.7.1",
+  "version": "2.0.0",
   "description": "Http request client promise-based supporting injectable request properties like: headers, parameters and more",
   "exports": {
     ".": {
