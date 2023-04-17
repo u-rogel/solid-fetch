@@ -13,17 +13,19 @@ interface RequestCaller<Injectables> {
   body?: string | object | Record<string, Inters<Injectables>> | Inters<Injectables> | any[]
 }
 
-interface Result<RequestOptions, Data> {
+type ResponseTypes = string | ArrayBuffer | any
+
+interface Result<RequestOptions, Data extends ResponseTypes> {
   request: {
     url: string
     requestOptions: RequestOptions
   }
-  data: Data | null
   headers: RequestInit['headers']
   ok: boolean
   redirected: boolean
   status: number
   statusText: string
+  data: Data
 }
 
 interface RequestOptions {
@@ -118,7 +120,7 @@ class SolidFetch<Injectables extends Record<string, any>> {
     return url
   }
 
-  request<Data = any>(pathStructure: TemplateStringsArray, ...dynamicParams: Array<Inters<Injectables>>) {
+  request<Data extends ResponseTypes = any>(pathStructure: TemplateStringsArray, ...dynamicParams: Array<Inters<Injectables>>) {
     const path: string = this.generateRequest(pathStructure, ...dynamicParams)
 
     return ({
@@ -226,12 +228,18 @@ class SolidFetch<Injectables extends Record<string, any>> {
               url: finalUrl,
               requestOptions: finalRequestOptions,
             },
-            data: null,
             headers: responseHeaders,
             ok: response.ok,
             redirected: response.redirected,
             status: response.status,
             statusText: response.statusText,
+            data: await (async () => {
+              if (responseHeaders?.['content-type']) {
+                if (
+                  responseHeaders['content-type'].includes('application/json')
+                ) {
+                  return response.json() as Data
+                }
           }
 
           if (
@@ -242,7 +250,12 @@ class SolidFetch<Injectables extends Record<string, any>> {
             result.data = await response.json() as Data
           } else {
             result.data = response as unknown as Data
+              }
+              return response.arrayBuffer() as Data
+            })()
           }
+
+
 
           if (this.interceptedRes.length > 0) {
             const interceptedResFinalVal = this.interceptedRes.reduce((accResult, interceptor) => {
