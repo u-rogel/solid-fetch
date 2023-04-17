@@ -240,16 +240,11 @@ class SolidFetch<Injectables extends Record<string, any>> {
                 ) {
                   return response.json() as Data
                 }
-          }
-
-          if (
-            responseHeaders
-              ?.['content-type']
-              ?.includes('application/json')
-          ) {
-            result.data = await response.json() as Data
-          } else {
-            result.data = response as unknown as Data
+                if (
+                  responseHeaders['content-type'].includes('text/plain')
+                ) {
+                  return response.text() as Data
+                }
               }
               return response.arrayBuffer() as Data
             })()
