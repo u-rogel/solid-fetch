@@ -6,7 +6,7 @@ type InjectableFunc<Injectables> = (p: InjectableFuncProps<Injectables>) => Excl
 
 type InjectableObject<Injectables> = (p: InjectableFuncProps<Injectables>) => Record<string, Exclude<InjectableValue<Injectables>, InjectableFunc<Injectables>>>
 
-type InjectableValue<Injectables> = string | number | InjectableFunc<Injectables>
+type InjectableValue<Injectables> = string | number | boolean | null | InjectableFunc<Injectables>
 
 interface RequestCaller<Injectables> {
   query?: Record<string, InjectableValue<Injectables>> | InjectableObject<Injectables>
@@ -191,18 +191,16 @@ class SolidFetch<Injectables extends Record<string, any>> {
       }
 
       // append body to request
-      else if (
+      if (
         resolvedBody instanceof FormData
       ) {
         requestOptions.body = resolvedBody
-      }
-      if (
+      } else if (
         typeof resolvedBody === 'object'
       ) {
         setHeaders['Content-Type'] = 'application/json'
         requestOptions.body = JSON.stringify(resolvedBody)
-      }
-      if (typeof resolvedBody === 'string') {
+      } else if (typeof resolvedBody === 'string') {
         requestOptions.body = resolvedBody
       }
 
