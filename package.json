@@ -1,6 +1,6 @@
 {
   "name": "solid-fetch",
-  "version": "3.0.0",
+  "version": "3.0.2",
   "description": "Http request client promise-based supporting injectable request properties like: headers, parameters and more",
   "exports": {
     ".": {
@@ -8,7 +8,7 @@
       "require": "./dist/cjs/index.min.cjs"
     }
   },
-  "main": "./dist/esm/index.min.cjs",
+  "main": "./dist/esm/index.min.mjs",
   "module": "./dist/esm/index.min.mjs",
   "types": "./dist/esm/index.d.ts",
   "files": [
