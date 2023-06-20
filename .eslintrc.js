@@ -21,6 +21,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'no-console': ['error', { allow: ['warn', 'error'], }],
     'linebreak-style': 0,
     'no-return-await': 'off',
     '@typescript-eslint/return-await': 'off',

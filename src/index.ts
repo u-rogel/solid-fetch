@@ -189,8 +189,6 @@ class SolidFetch<Injectables extends Record<string, any>> {
       ) {
         resolvedBody = this.resolveDynamic(body)
       }
-      console.log({resolvedBody, type: typeof resolvedBody});
-      
 
       // append body to request
       if (
