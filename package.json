@@ -8,7 +8,7 @@
       "require": "./dist/cjs/index.min.cjs"
     }
   },
-  "main": "./dist/cjs/index.min.cjs",
+  "main": "./dist/esm/index.min.cjs",
   "module": "./dist/esm/index.min.mjs",
   "types": "./dist/esm/index.d.ts",
   "files": [
