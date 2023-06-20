@@ -189,6 +189,8 @@ class SolidFetch<Injectables extends Record<string, any>> {
       ) {
         resolvedBody = this.resolveDynamic(body)
       }
+      console.log({resolvedBody, type: typeof resolvedBody});
+      
 
       // append body to request
       if (
@@ -198,7 +200,8 @@ class SolidFetch<Injectables extends Record<string, any>> {
       } else if (
         typeof resolvedBody === 'object'
       ) {
-        setHeaders['Content-Type'] = 'application/json'
+        // @ts-expect-error is a valid header
+        requestOptions.headers['Content-Type'] = 'application/json'
         requestOptions.body = JSON.stringify(resolvedBody)
       } else if (typeof resolvedBody === 'string') {
         requestOptions.body = resolvedBody

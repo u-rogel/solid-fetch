@@ -17,6 +17,10 @@ function App() {
         hell: 'world',
         a: p.apiUrl
       }),
+      method: 'POST',
+      body: {
+        post: '5'
+      }
     })
       .then((res) => {
         console.log({ res});
