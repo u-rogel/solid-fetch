@@ -1,11 +1,11 @@
 ## Solid-Fetch
 
-SolidFetch is created with one goal in mind, to make client-server communication as easy as possible.
+SolidFetch is created with one goal in mind, to make client-server-requests as easy as possible.
 These means: less code, less headache and more power over the communication channel.
 
 
 ### Core tools
-Supporting injectable request properties in url, parameters, search-query and headers.
+Supporting injectable request properties in url, parameters, search-query, headers and body.
 Supporting intercepting requests, responses and errors to easily control and maintain communication with servers. 
 
 ## Install
@@ -22,17 +22,14 @@ npm install solid-fetch
 
 ## Usage
 
-We assume the module is used in the browser so `fetch` is picked by default. If you run in node or another environment pass in your custom fetch as `systemFetch` key to the `setConfig` function. In node we recommend to use - `node-fetch`.
+Since node v18 `fetch` is supported with no extra effort so the native `fetch` function will be used on both browser and node.
 
 ```js
 import SolidFetch from 'solid-fetch'
-import fetch from 'node-fetch'
 
-SolidFetch.setConfig({
-  systemFetch: fetch,
-})
+const SolidFetchClient = new SolidFetch()
 
-SolidFetch.request`http://test-server.io/messages`()
+SolidFetchClient.request`http://test-server.io/messages`()
   .then((res) => {
     console.log('result from SolidFetch')
   })
@@ -42,20 +39,18 @@ SolidFetch.request`http://test-server.io/messages`()
 
 ```
 
-**in the browser use-case the fetch needs to be handed over like shown in the example*
-
 ### Config Props
 
 | Prop           | Type      | Default |  Description            |
 |----------------|-----------|---------|-------------------------|
-| systemFetch    | <Fetch>   | null    | The fetch function SolidFetch should use. Normally the standard `fetch` in the browser or `node-fetch` in node. |
+| initInjectables| `Object`  | {}      | The props the api-client can inject into the request properties: `url`, `headers`, etc. |
 | globalHeaders  | `Object`  | {}      | Global headers to be injected to all requests |
 | globalQuery    | `Object`  | {}      | Global search-query params to be injected to all requests |
 | interceptedReq | `Array`   | []      | Array of interceptors to run before request is sent |
 | interceptedRes | `Array`   | []      | Array of interceptors to run after response is received |
 | interceptedErr | `Array`   | []      | Array of interceptors to run after error is received |
 
-## Injections
+## Set Injectables
 
 SolidFetch comes very handy when you have plenty of dynamic props that needs to create the request.
 Using SolidFetch you can give the module pieces of data that you would like to use later, ex.
@@ -67,17 +62,18 @@ where ever you need. Also by setting the two objects will be merged, only former
 ```js
 import SolidFetch from 'solid-fetch'
 
-SolidFetch.setInjectables({
+const SolidFetchClient = new SolidFetch()
+
+SolidFetchClient.setInjectables({
   language: 'de',
   userId: '123',
-  jwtToken: 'abc'
+  jwtToken: () => dataStore.getState().jwtToken
 })
 ```
 
-### Injections Per Request
+### Consume Injections in Request
 
-After setting the injectables you can just refer to it during the request construction since the module 
-is already aware of it.
+After setting the injectables you can just refer to it during the request construction since the module is already aware of it.
 
 ```js
 import SolidFetch from 'solid-fetch'
@@ -105,7 +101,7 @@ SolidFetch.request`http://test-server.io/${(p) => p.language}/messages`({
   })
 ```
 
-**Note: Body can be resolved in two ways**
+**Note: Body, Query, Headers can be resolved in two ways**
 * Less intuitive but fits for object with nested keys:
 ```js
 SolidFetch.request`url`({
@@ -125,6 +121,32 @@ SolidFetch.request`url`({
   }
 })
 ```
+
+### Typescript Support
+
+Types for the injectables are partially supported. 
+
+```ts
+
+import SolidFetch from 'solid-fetch'
+
+interface Injectables {
+  apiUrl
+}
+
+const SolidFetchClient = new SolidFetch<Injectables>()
+
+SolidFetchClient.request`${(p) => p.apiUrl}/messages`()
+  .then((res) => {
+    console.log('result from SolidFetch')
+  })
+  .catch((err) => {
+    console.log('error from SolidFetch')
+  })
+
+```
+\* *`p` will be correctly typed and will offer `apiUrl` as auto complete*
+
 
 ### Global Injections
 
@@ -154,6 +176,31 @@ SolidFetch.request`http://test-server.io/${p => p.language}/messages`({
     console.log('error from SolidFetch')
   })
 ```
+
+## Using with Typescript (Injectables & Response)
+
+Typescript is supported as well. Injectables can be typed to have autocompletion. Requests can receive a type to have typed response. Note the type will be present on the `data` prop of the response.
+
+```ts
+import SolidFetch from 'solid-fetch'
+
+interface Injectables {
+  baseUrl: string
+  userId: string
+  jwtToken: () => string
+}
+
+const SolidFetchClient = new SolidFetch<Injectables>({
+  initInjectables: {
+    baseUrl: 'http://test-server.io',
+    userId: '123',
+    jwtToken: () => dataStore.getState().jwtToken
+  }
+})
+
+const res = await SolidFetchClient.request<string>`${p => p.baseUrl}/messages`()
+```
+
 
 ## Interceptions
 
@@ -284,23 +331,10 @@ Standard JS Error with JSON content:
 
 ## Advanced
 
-If you need more than one SolidFetch client for communication with several servers. You can
-import an instance from the module and then consume the instance instead
-
-```js
-import { instance } from 'solid-fetch'
-
-const SolidFetchChatApi = instance()
-
-SolidFetchChatApi.setConfig({
-  ...
-})
-```
-
 Use your solid-fetch configs outside of it
 
 ```js
-import SolidFetch from 'solid-fetch'
+import SolidFetchClient from './your-solid-fetch-client'
 
-const { useId, jwtToken } = SolidFetch.getInjectables()
+const { useId, jwtToken } = SolidFetchClient.getInjectables()
 ```

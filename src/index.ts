@@ -1,16 +1,18 @@
 type HTTPMethods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'TRACE' | 'CONNECT'
 
-type InterFuncProps<Injectables> = Injectables
+type InjectableFuncProps<Injectables> = Injectables
 
-type InterFunc<Injectables> = (p: InterFuncProps<Injectables>) => Exclude<Inters<Injectables>, InterFunc<Injectables>>
+type InjectableFunc<Injectables> = (p: InjectableFuncProps<Injectables>) => Exclude<InjectableValue<Injectables>, InjectableFunc<Injectables>>
 
-type Inters<Injectables> = string | number | InterFunc<Injectables>
+type InjectableObject<Injectables> = (p: InjectableFuncProps<Injectables>) => Record<string, Exclude<InjectableValue<Injectables>, InjectableFunc<Injectables>>>
+
+type InjectableValue<Injectables> = string | number | InjectableFunc<Injectables>
 
 interface RequestCaller<Injectables> {
-  query?: Record<string, Inters<Injectables>>
+  query?: Record<string, InjectableValue<Injectables>> | InjectableObject<Injectables>
   method?: HTTPMethods
-  headers?: Record<string, Inters<Injectables>>
-  body?: string | object | Record<string, Inters<Injectables>> | Inters<Injectables> | any[]
+  headers?: Record<string, InjectableValue<Injectables>> | InjectableObject<Injectables>
+  body?: string | object | FormData | Record<string, InjectableValue<Injectables>> | InjectableValue<Injectables> | any[]
 }
 
 type ResponseTypes = string | ArrayBuffer | any
@@ -31,7 +33,7 @@ interface Result<RequestOptions, Data extends ResponseTypes> {
 interface RequestOptions {
   method: RequestInit['method']
   headers: RequestInit['headers']
-  body?: string
+  body?: string | FormData
 }
 
 class SolidFetch<Injectables extends Record<string, any>> {
@@ -120,7 +122,7 @@ class SolidFetch<Injectables extends Record<string, any>> {
     return url
   }
 
-  request<Data extends ResponseTypes = any>(pathStructure: TemplateStringsArray, ...dynamicParams: Array<Inters<Injectables>>) {
+  request<Data extends ResponseTypes = any>(pathStructure: TemplateStringsArray, ...dynamicParams: Array<InjectableValue<Injectables>>) {
     const path: string = this.generateRequest(pathStructure, ...dynamicParams)
 
     return ({
@@ -129,9 +131,24 @@ class SolidFetch<Injectables extends Record<string, any>> {
       headers: rawHeaders = {},
       body,
     }: RequestCaller<Injectables> = {}) => {
-      const query = { ...this.globalQuery, ...rawQuery }
-      const headers = { ...this.globalHeaders, ...rawHeaders }
-
+      const query = {
+        ...this.globalQuery,
+        ...(() => {
+          if (typeof rawQuery === 'function') {
+            return rawQuery(this.getInjectables() as Injectables)
+          }
+          return rawQuery
+        })()
+      }
+      const headers = {
+        ...this.globalHeaders,
+        ...(() => {
+          if (typeof rawHeaders === 'function') {
+            return rawHeaders(this.getInjectables() as Injectables)
+          }
+          return rawHeaders
+        })()
+      }
       let searchQueryPrepend = ''
       if (this.#emptySearch.test(path)) {
         searchQueryPrepend = ''
@@ -159,26 +176,35 @@ class SolidFetch<Injectables extends Record<string, any>> {
         },
       };
 
-      (() => {
-        let resolvedBody = body
-        if (typeof body === 'function') {
-          resolvedBody = body(this.getInjectables() as Injectables)
-        } else if (
-          setHeaders['Content-Type'] === 'application/json'
-          && typeof body === 'object'
-        ) {
-          resolvedBody = this.resolveDynamic(body)
-        }
-        if (
-          setHeaders['Content-Type'] === 'application/json'
-          && typeof resolvedBody === 'object'
-        ) {
-          requestOptions.body = JSON.stringify(resolvedBody)
-        }
-        if (typeof resolvedBody === 'string') {
-          requestOptions.body = resolvedBody
-        }
-      })()
+      // resolving body if needed
+      let resolvedBody = body
+      if (typeof body === 'function') {
+        resolvedBody = body(this.getInjectables() as Injectables)
+      } else if (
+        body instanceof FormData
+      ) {
+        // skip
+      } else if (
+        typeof body === 'object'
+      ) {
+        resolvedBody = this.resolveDynamic(body)
+      }
+
+      // append body to request
+      else if (
+        resolvedBody instanceof FormData
+      ) {
+        requestOptions.body = resolvedBody
+      }
+      if (
+        typeof resolvedBody === 'object'
+      ) {
+        setHeaders['Content-Type'] = 'application/json'
+        requestOptions.body = JSON.stringify(resolvedBody)
+      }
+      if (typeof resolvedBody === 'string') {
+        requestOptions.body = resolvedBody
+      }
 
       let finalUrl = url
       let finalRequestOptions = { ...requestOptions }
@@ -249,8 +275,6 @@ class SolidFetch<Injectables extends Record<string, any>> {
               return response.arrayBuffer() as Data
             })()
           }
-
-
 
           if (this.interceptedRes.length > 0) {
             const interceptedResFinalVal = this.interceptedRes.reduce((accResult, interceptor) => {
