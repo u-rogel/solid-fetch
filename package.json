@@ -1,16 +1,17 @@
 {
   "name": "solid-fetch",
-  "version": "3.0.5",
-  "description": "Http request client promise-based supporting injectable request properties like: headers, parameters and more",
+  "version": "3.0.6",
+  "description": "Http request client promise-based supporting injectable request properties like: headers, parameters, query, body, etc.",
   "exports": {
     ".": {
       "import": "./dist/esm/index.min.mjs",
-      "require": "./dist/cjs/index.min.cjs"
+      "require": "./dist/cjs/index.min.cjs",
+      "types": "./dist/types/index.d.ts"
     }
   },
   "main": "./dist/esm/index.min.mjs",
   "module": "./dist/esm/index.min.mjs",
-  "types": "./dist/esm/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "files": [
     "dist",
     "LICENSE"
@@ -23,7 +24,7 @@
     "http-request"
   ],
   "scripts": {
-    "build": "rollup --config ./rollup.config.js",
+    "build": "rm -rf ./dist && tsc && rollup --config ./rollup.config.js",
     "publish": "npm publish",
     "eslint": "eslint ."
   },

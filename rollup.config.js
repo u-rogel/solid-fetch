@@ -37,7 +37,7 @@ const config = {
       include: ['**/*'],
       outDir: './dist',
       module: "esnext",
-      declaration: true,
+      declaration: false,
       esModuleInterop: true,
       forceConsistentCasingInFileNames: true,
       strict: true,
