@@ -13,6 +13,7 @@ interface RequestCaller<Injectables> {
   method?: HTTPMethods
   headers?: Record<string, InjectableValue<Injectables>> | InjectableObject<Injectables>
   body?: string | object | FormData | Record<string, InjectableValue<Injectables>> | InjectableValue<Injectables> | any[]
+  credentials?: RequestInit['credentials']
 }
 
 type ResponseTypes = string | ArrayBuffer | any
@@ -34,6 +35,7 @@ interface RequestOptions {
   method: RequestInit['method']
   headers: RequestInit['headers']
   body?: string | FormData
+  credentials?: RequestInit['credentials']
 }
 
 class SolidFetch<Injectables extends Record<string, any>> {
@@ -43,14 +45,24 @@ class SolidFetch<Injectables extends Record<string, any>> {
   interceptedErr: any[]
   globalQuery: any
   globalHeaders: any
+  globalCredentials?: RequestInit['credentials']
 
   constructor({
-    initInjectables = {},
+    initInjectables = {} as Injectables,
     interceptedReq = [],
     interceptedRes = [],
     interceptedErr = [],
     globalQuery = {},
     globalHeaders = {},
+    globalCredentials,
+  }: {
+    initInjectables?: Injectables,
+    interceptedReq?: any[],
+    interceptedRes?: any[],
+    interceptedErr?: any[],
+    globalQuery?: any,
+    globalHeaders?: any,
+    globalCredentials?: RequestInit['credentials'],
   }) {
     this.injectables = () => initInjectables
     this.interceptedReq = interceptedReq
@@ -58,6 +70,9 @@ class SolidFetch<Injectables extends Record<string, any>> {
     this.interceptedErr = interceptedErr
     this.globalQuery = globalQuery
     this.globalHeaders = globalHeaders
+    if (globalCredentials != null) {
+      this.globalCredentials = globalCredentials
+    }
   }
 
   #emptySearch = /\?$/
@@ -86,7 +101,7 @@ class SolidFetch<Injectables extends Record<string, any>> {
         return { ...acc, [key]: currentInjectables[key]() }
       }
       return { ...acc, [key]: currentInjectables[key] }
-    }, {})
+    }, {} as Injectables)
   }
 
   resolveDynamic(dynamicParams: any) {
@@ -130,6 +145,7 @@ class SolidFetch<Injectables extends Record<string, any>> {
       query: rawQuery = {},
       headers: rawHeaders = {},
       body,
+      credentials: rawCredentials,
     }: RequestCaller<Injectables> = {}) => {
       const query = {
         ...this.globalQuery,
@@ -203,6 +219,14 @@ class SolidFetch<Injectables extends Record<string, any>> {
         requestOptions.body = JSON.stringify(resolvedBody)
       } else if (typeof resolvedBody === 'string') {
         requestOptions.body = resolvedBody
+      }
+
+      if (rawCredentials != null || this.globalCredentials != null) {
+        if (rawCredentials != null) {
+          requestOptions.credentials = rawCredentials
+        } else if (this.globalCredentials != null) {
+          requestOptions.credentials = this.globalCredentials
+        }
       }
 
       let finalUrl = url
@@ -312,3 +336,4 @@ class SolidFetch<Injectables extends Record<string, any>> {
 }
 
 export default SolidFetch
+

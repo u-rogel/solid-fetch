@@ -6,7 +6,8 @@ import SolidFetch from 'solid-fetch';
 const FetchClient = new SolidFetch({
   initInjectables: {
     apiUrl: () => 'https://my-json-server.typicode.com'
-  }
+  },
+  globalCredentials: 'include'
 })
 
 function App() {
@@ -20,11 +21,10 @@ function App() {
       method: 'POST',
       body: {
         post: '5'
-      }
+      },
     })
       .then((res) => {
-        console.log({ res});
-        
+        console.log({ res });
       })
   }, [])
   return (

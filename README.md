@@ -46,6 +46,7 @@ SolidFetchClient.request`http://test-server.io/messages`()
 | initInjectables| `Object`  | {}      | The props the api-client can inject into the request properties: `url`, `headers`, etc. |
 | globalHeaders  | `Object`  | {}      | Global headers to be injected to all requests |
 | globalQuery    | `Object`  | {}      | Global search-query params to be injected to all requests |
+| globalCredentials    | `String`  |      | Global credentials prop to inject to all requests |
 | interceptedReq | `Array`   | []      | Array of interceptors to run before request is sent |
 | interceptedRes | `Array`   | []      | Array of interceptors to run after response is received |
 | interceptedErr | `Array`   | []      | Array of interceptors to run after error is received |
@@ -121,13 +122,21 @@ SolidFetch.request`url`({
   }
 })
 ```
+ 
+### Reuse The Injectables
+
+If you need to access the injectables outside of the request you can:
+
+```js
+SolidFetch.getInjectables().apiUrl
+```
+
 
 ### Typescript Support
 
 Types for the injectables are partially supported. 
 
 ```ts
-
 import SolidFetch from 'solid-fetch'
 
 interface Injectables {
@@ -271,9 +280,9 @@ SolidFetch.setConfig({
 
 **If the status code is NOT 200-299, an error will be thrown.*
 
-### Request, Response, Error Shape
+## Request, Response, Error Shape
 
-Request:
+### Request:
 
 ```js
 {
@@ -287,7 +296,7 @@ Request:
 }
 ```
 
-Response:
+### Response:
 
 ```js
 {
@@ -310,7 +319,7 @@ Response:
 }
 ```
 
-Standard JS Error with JSON content:
+### Standard JS Error with JSON content:
 
 ```js
 {
@@ -337,4 +346,10 @@ Use your solid-fetch configs outside of it
 import SolidFetchClient from './your-solid-fetch-client'
 
 const { useId, jwtToken } = SolidFetchClient.getInjectables()
+```
+
+Add credentials to your fetch call
+
+```js
+SolidFetchClient.request`my-url`({ credentials: 'omit' })
 ```
