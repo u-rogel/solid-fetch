@@ -1,6 +1,6 @@
 {
   "name": "solid-fetch",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "Http request client promise-based supporting injectable request properties like: headers, parameters, query, body, etc.",
   "type": "module",
   "main": "./dist/index.min.mjs",

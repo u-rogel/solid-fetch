@@ -1,4 +1,6 @@
-type HTTPMethods = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'TRACE' | 'CONNECT'
+type ValueOrGetter<T> = {
+  [K in keyof T]: T[K] | (() => T[K]);
+};
 
 type InjectableFuncProps<Injectables> = Injectables
 
@@ -10,7 +12,7 @@ type InjectableValue<Injectables> = string | number | boolean | null | Injectabl
 
 interface RequestCaller<Injectables> {
   query?: Record<string, InjectableValue<Injectables>> | InjectableObject<Injectables>
-  method?: HTTPMethods
+  method?: RequestInit['method']
   headers?: Record<string, InjectableValue<Injectables>> | InjectableObject<Injectables>
   body?: string | object | FormData | Record<string, InjectableValue<Injectables>> | InjectableValue<Injectables> | any[]
   credentials?: RequestInit['credentials']
@@ -23,11 +25,11 @@ interface Result<RequestOptions, Data extends ResponseTypes> {
     url: string
     requestOptions: RequestOptions
   }
-  headers: RequestInit['headers']
+  headers: ResponseInit['headers']
   ok: boolean
   redirected: boolean
-  status: number
-  statusText: string
+  status: ResponseInit['status']
+  statusText: ResponseInit['statusText']
   data: Data
 }
 
@@ -56,7 +58,7 @@ class SolidFetch<Injectables extends Record<string, any>> {
     globalHeaders = {},
     globalCredentials,
   }: {
-    initInjectables?: Injectables,
+    initInjectables?: ValueOrGetter<Injectables>,
     interceptedReq?: any[],
     interceptedRes?: any[],
     interceptedErr?: any[],
